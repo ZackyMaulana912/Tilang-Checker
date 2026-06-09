@@ -5,7 +5,7 @@ WORKDIR /app
 # System libs untuk OpenCV / EasyOCR (libGL dkk) — base Debian punya apt normal,
 # jadi tidak ada masalah "externally-managed" seperti di Nix/Railway.
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
