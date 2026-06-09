@@ -23,6 +23,32 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+/**
+ * Resize gambar ke maksimal 1280px di sisi terpanjang (rasio dijaga) lalu
+ * compress ke JPEG quality 85. Mengurangi ukuran upload & mempercepat OCR.
+ * Pakai Canvas API browser — tidak butuh library tambahan.
+ * Return base64 tanpa prefix "data:image/...;base64,".
+ */
+export function compressImage(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    const img = new Image();
+    img.onload = () => {
+      const maxSize = 1280;
+      let w = img.width;
+      let h = img.height;
+      if (w > h && w > maxSize) { h = (h * maxSize) / w; w = maxSize; }
+      else if (h > maxSize)     { w = (w * maxSize) / h; h = maxSize; }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(img.src);
+      resolve(canvas.toDataURL("image/jpeg", 0.85).split(",")[1]);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export async function checkPlate(file: File): Promise<CheckResult> {
   const base64 = await fileToBase64(file);
   const res = await fetch(`${API_URL}/check`, {

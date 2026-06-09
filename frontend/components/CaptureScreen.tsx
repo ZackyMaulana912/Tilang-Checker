@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import { compressImage } from '@/lib/api';
 
 interface CaptureScreenProps {
   onBack: () => void;
@@ -14,15 +15,12 @@ export default function CaptureScreen({ onBack, onCapture, onPickFromGallery, on
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, callback: (b64: string) => void) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, callback: (b64: string) => void) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      callback(result.split(',')[1]);
-    };
-    reader.readAsDataURL(file);
+    // Compress + resize sebelum dikirim ke backend (lebih cepat upload & OCR)
+    const base64 = await compressImage(file);
+    callback(base64);
   };
 
   return (
