@@ -98,6 +98,27 @@ def parse_expiry(texts: list[str]) -> dict:
     return {"month": None, "year": None, "raw": combined}
 
 
+def parse_plate(texts: list[str]) -> str | None:
+    """
+    Rekonstruksi nomor plat Indonesia dari token OCR MENTAH.
+
+    PENTING: jangan pakai teks yang sudah dinormalisasi (normalize_ocr),
+    karena B->8, O->0, I->1 dll akan merusak huruf plat
+    (mis. "B 537 RUM" jadi "8 537 RUM"). Pakai teks asli dari EasyOCR.
+
+    Format plat: 1-2 huruf (kode area) + 1-4 angka + 1-3 huruf.
+    Cover variasi spasi: "B 537 RUM", "B537RUM", "B 537RUM", "B537 RUM".
+    """
+    raw = " ".join(t.upper() for t in texts)
+    # Buang karakter selain huruf/angka, sisakan spasi sebagai pemisah
+    cleaned = re.sub(r"[^A-Z0-9 ]", " ", raw)
+
+    m = re.search(r"\b([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})\b", cleaned)
+    if m:
+        return f"{m.group(1)} {m.group(2)} {m.group(3)}"
+    return None
+
+
 def _preprocess_variants(image: Image.Image) -> list[Image.Image]:
     """
     Buat beberapa varian gambar untuk dicoba OCR-nya.
@@ -169,16 +190,28 @@ def read_expiry_date(image_bytes: bytes) -> dict:
     variants = _preprocess_variants(image)
 
     best: dict = {"month": None, "year": None, "confidence": 0.0, "raw_text": ""}
+    best_plate: str | None = None
+    best_plate_conf = 0.0
 
     for variant in variants:
         img_array = np.array(variant)
         results = _get_reader().readtext(img_array)
+
+        # Log mentah supaya kelihatan di Railway/HuggingFace logs saat debugging
+        print("RAW OCR OUTPUT:", [(t, round(float(c), 2)) for _, t, c in results])
 
         if not results:
             continue
 
         texts    = [r[1] for r in results]
         conf_avg = sum(r[2] for r in results) / len(results)
+
+        # Plat: ekstrak dari teks MENTAH (texts), JANGAN dari teks ternormalisasi.
+        plate = parse_plate(texts)
+        if plate and conf_avg > best_plate_conf:
+            best_plate = plate
+            best_plate_conf = conf_avg
+
         parsed   = parse_expiry(texts)
 
         current = {
@@ -197,4 +230,5 @@ def read_expiry_date(image_bytes: bytes) -> dict:
         elif best["month"] is None and current["confidence"] > best["confidence"]:
             best = current
 
+    best["plate_text"] = best_plate
     return best

@@ -64,10 +64,13 @@ async def check_plate(req: CheckRequest):
     # M5: Agent decision loop
     agent_result = run_agent(detect_result, ocr_result)
 
+    # Nomor plat hasil OCR (None kalau tidak terbaca → fallback "UNKNOWN")
+    plate_text = ocr_result.get("plate_text") or "UNKNOWN"
+
     # M4: Generate laporan (import lazy agar LLM tidak block startup)
     from pipeline.report import generate_report
     report = generate_report(
-        plate_text     = "UNKNOWN",
+        plate_text     = plate_text,
         expiry_month   = agent_result.get("expiry_month"),
         expiry_year    = agent_result.get("expiry_year"),
         status         = agent_result["status"],
@@ -76,7 +79,7 @@ async def check_plate(req: CheckRequest):
 
     return CheckResponse(
         status         = agent_result["status"],
-        plate_text     = "UNKNOWN",
+        plate_text     = plate_text,
         expiry_month   = agent_result.get("expiry_month"),
         expiry_year    = agent_result.get("expiry_year"),
         days_remaining = agent_result.get("days_remaining"),
