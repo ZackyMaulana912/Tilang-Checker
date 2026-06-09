@@ -16,7 +16,7 @@ app.add_middleware(
     # (termasuk preview deploy yang prefix-nya acak). Wildcard string seperti
     # "https://*.vercel.app" TIDAK didukung Starlette — harus lewat regex.
     allow_origins=["http://localhost:3000"],
-    allow_origin_regex=r"https://.*\.(vercel\.app|up\.railway\.app)",
+    allow_origin_regex=r"https://.*\.(vercel\.app|hf\.space|up\.railway\.app)",
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=False,

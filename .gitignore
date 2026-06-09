@@ -59,3 +59,4 @@ data/samples/
 # ============ Claude internal ============
 .claude/
 CLAUDE.md
+CLAUDE2.md
