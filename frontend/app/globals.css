@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary:      #FFFFFF;
+  --bg-secondary:    #F2F2F7;
+  --label-primary:   #000000;
+  --label-secondary: #8E8E93;
+  --label-tertiary:  #AEAEB2;
+  --blue:            #007AFF;
+  --green:           #34C759;
+  --red:             #FF3B30;
+  --orange:          #FF9500;
+  --amber:           #FF9F0A;
+  --glass-white:     rgba(255, 255, 255, 0.72);
+  --glass-green:     rgba(52, 199, 89, 0.15);
+  --glass-red:       rgba(255, 59, 48, 0.12);
+  --glass-amber:     rgba(255, 159, 10, 0.12);
+  --glass-border:    rgba(209, 209, 214, 0.50);
+  --radius-card:     16px;
+  --radius-btn:      14px;
+}
+
+.glass-card {
+  background: var(--glass-white);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 0.5px solid var(--glass-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-card);
+}
+
+/* Material Symbols optical sizing */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 24px;
+  line-height: 1;
+  vertical-align: middle;
+  user-select: none;
+}
+
+/* Hide scrollbar globally */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

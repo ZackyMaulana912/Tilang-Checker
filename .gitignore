@@ -1,0 +1,61 @@
+# ============ SECRETS & API KEYS — JANGAN COMMIT ============
+backend/.env
+backend/.env.local
+backend/.env.production
+frontend/.env.local
+frontend/.env.*.local
+*.env
+.env
+# .env.example BOLEH di-commit (template tanpa nilai asli)
+!backend/.env.example
+!frontend/.env.example
+
+# ============ Python ============
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# ============ Model weights (file besar) ============
+backend/models/*.pt
+backend/models/*.pth
+backend/models/*.onnx
+backend/yolov8n.pt
+
+# ============ ML cache ============
+.cache/
+backend/.cache/
+
+# ============ Node / Next.js ============
+node_modules/
+frontend/.next/
+frontend/out/
+.npm
+
+# ============ macOS ============
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V*
+.Trashes
+
+# ============ IDE ============
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ============ Data ============
+data/samples/
+*.log
+
+# ============ Claude internal ============
+.claude/
+CLAUDE.md
