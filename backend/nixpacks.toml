@@ -1,12 +1,13 @@
 [phases.setup]
 nixPkgs = ["python311", "python311Packages.pip", "python311Packages.setuptools"]
+# Base image Railway = Ubuntu, jadi libGL diinstall via apt ke path sistem
+# standar (/usr/lib). Ini yang dicari cv2 saat runtime — memperbaiki error
+# "libGL.so.1: cannot open shared object file". Tidak perlu uninstall opencv
+# (pip versi Nix men-disable perintah uninstall).
+aptPkgs = ["libgl1", "libglib2.0-0"]
 
 [phases.install]
-cmds = [
-  "pip3.11 install -r requirements.txt --break-system-packages",
-  "pip3.11 uninstall -y opencv-python opencv-python-headless",
-  "pip3.11 install opencv-python-headless==4.11.0.86 --break-system-packages"
-]
+cmds = ["pip3.11 install -r requirements.txt --break-system-packages"]
 
 [start]
 cmd = "python3.11 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
