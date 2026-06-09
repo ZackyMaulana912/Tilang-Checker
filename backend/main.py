@@ -12,12 +12,11 @@ app = FastAPI(title="Tilang Checker API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://*.vercel.app",
-        "https://*.up.railway.app",
-    ],
-    allow_origin_regex=r"https://tilang-checker.*\.(vercel\.app|up\.railway\.app)",
+    # localhost untuk dev; regex menutup SEMUA subdomain vercel.app & railway.app
+    # (termasuk preview deploy yang prefix-nya acak). Wildcard string seperti
+    # "https://*.vercel.app" TIDAK didukung Starlette — harus lewat regex.
+    allow_origins=["http://localhost:3000"],
+    allow_origin_regex=r"https://.*\.(vercel\.app|up\.railway\.app)",
     allow_methods=["*"],
     allow_headers=["*"],
     allow_credentials=False,

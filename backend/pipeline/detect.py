@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 from PIL import Image
 import numpy as np
-import io, base64
+import io
 
 _model = None
 

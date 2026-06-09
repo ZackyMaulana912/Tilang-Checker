@@ -1,3 +1,4 @@
+import calendar
 from datetime import date
 from config import OCR_CONFIDENCE_THRESHOLD
 
@@ -29,16 +30,20 @@ def run_agent(detect_result: dict, ocr_result: dict) -> dict:
     if not month or not year:
         return _verdict("PERLU_VERIFIKASI", "Tanggal masa berlaku tidak terbaca", confidence)
 
-    # Step 3 — Bandingkan dengan hari ini
-    today  = date.today()
-    expiry = date(year, month, 1)
-    delta  = (expiry - today).days
+    # Step 3 — Bandingkan dengan hari ini.
+    # STNK berlaku hingga AKHIR bulan, jadi pakai tanggal terakhir bulan tsb,
+    # bukan tanggal 1 (kalau pakai tanggal 1, kendaraan yang masih sah di bulan
+    # berjalan bisa salah dinyatakan MATI sampai ~30 hari lebih awal).
+    today    = date.today()
+    last_day = calendar.monthrange(year, month)[1]
+    expiry   = date(year, month, last_day)
+    delta    = (expiry - today).days
 
-    # Step 4 — Verdict
-    status = "AKTIF" if delta > 0 else "MATI"
+    # Step 4 — Verdict (delta == 0 berarti expiry hari ini → masih AKTIF)
+    status = "AKTIF" if delta >= 0 else "MATI"
     reason = (f"Masa berlaku {expiry.strftime('%B %Y')}. "
-              f"{'Masih aktif' if delta > 0 else 'Sudah mati'} "
-              f"{abs(delta)} hari {'lagi' if delta > 0 else 'yang lalu'}.")
+              f"{'Masih aktif' if delta >= 0 else 'Sudah mati'} "
+              f"{abs(delta)} hari {'lagi' if delta >= 0 else 'yang lalu'}.")
 
     return {
         "status":        status,
