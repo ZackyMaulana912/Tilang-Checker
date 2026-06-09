@@ -3,7 +3,13 @@ from PIL import Image
 import numpy as np
 import io, base64
 
-model = YOLO("yolov8n.pt")  # auto-download saat pertama run
+_model = None
+
+def _get_model():
+    global _model
+    if _model is None:
+        _model = YOLO("yolov8n.pt")
+    return _model
 
 def _to_jpeg(image: Image.Image) -> bytes:
     buf = io.BytesIO()
@@ -24,7 +30,7 @@ def detect_plate(image_bytes: bytes) -> dict:
     image = Image.open(io.BytesIO(image_bytes))
     if image.mode != "RGB":
         image = image.convert("RGB")
-    results = model(image, verbose=False)
+    results = _get_model()(image, verbose=False)
 
     # Filter deteksi: cari class kendaraan (car=2, motorcycle=3, truck=7, bus=5)
     vehicle_classes = {2, 3, 5, 7}

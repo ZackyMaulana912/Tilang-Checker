@@ -22,14 +22,16 @@ def build_model() -> nn.Module:
 # === Path model ===
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "../models/classify.pt")
 
-def _load_model() -> nn.Module:
-    m = build_model()
-    if os.path.exists(MODEL_PATH):
-        m.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
-    m.eval()
-    return m
+_model = None
 
-_model = _load_model()
+def _get_model() -> nn.Module:
+    global _model
+    if _model is None:
+        _model = build_model()
+        if os.path.exists(MODEL_PATH):
+            _model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
+        _model.eval()
+    return _model
 
 # === Rule-based fallback ===
 def _rule_based_check(image: Image.Image) -> tuple[bool, float]:
@@ -80,7 +82,7 @@ def is_valid_plate(image_bytes: bytes) -> dict:
 
         tensor = transform(image).unsqueeze(0)
         with torch.no_grad():
-            logits = _model(tensor)
+            logits = _get_model()(tensor)
             probs  = torch.softmax(logits, dim=1)
             conf, pred = torch.max(probs, 1)
 

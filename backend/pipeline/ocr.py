@@ -4,7 +4,13 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageOps, ImageFilter
 import io
 
-reader = easyocr.Reader(['id', 'en'], gpu=False)
+_reader = None
+
+def _get_reader():
+    global _reader
+    if _reader is None:
+        _reader = easyocr.Reader(['id', 'en'], gpu=False)
+    return _reader
 
 def normalize_ocr(text: str) -> str:
     """Fix karakter OCR yang sering salah baca."""
@@ -166,7 +172,7 @@ def read_expiry_date(image_bytes: bytes) -> dict:
 
     for variant in variants:
         img_array = np.array(variant)
-        results = reader.readtext(img_array)
+        results = _get_reader().readtext(img_array)
 
         if not results:
             continue
