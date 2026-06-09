@@ -1,8 +1,12 @@
 [phases.setup]
-nixPkgs = ["python311", "python311Packages.pip", "python311Packages.setuptools", "libGL", "libGLU", "glib"]
+nixPkgs = ["python311", "python311Packages.pip", "python311Packages.setuptools"]
 
 [phases.install]
-cmds = ["pip3.11 install -r requirements.txt --break-system-packages"]
+cmds = [
+  "pip3.11 install -r requirements.txt --break-system-packages",
+  "pip3.11 uninstall -y opencv-python opencv-python-headless",
+  "pip3.11 install opencv-python-headless==4.11.0.86 --break-system-packages"
+]
 
 [start]
-cmd = "python3.11 -m uvicorn main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 75"
+cmd = "python3.11 -m uvicorn main:app --host 0.0.0.0 --port $PORT"
