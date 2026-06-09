@@ -4,11 +4,12 @@ import { useState } from 'react';
 import HomeScreen from '@/components/HomeScreen';
 import CaptureScreen from '@/components/CaptureScreen';
 import ProcessingScreen from '@/components/ProcessingScreen';
-import HistoryScreen, { type HistoryGroup } from '@/components/HistoryScreen';
+import HistoryScreen from '@/components/HistoryScreen';
 import ResultAktif from '@/components/ResultAktif';
 import ResultMati from '@/components/ResultMati';
 import ResultVerifikasi from '@/components/ResultVerifikasi';
 import { checkPlateBase64, type CheckResult } from '@/lib/api';
+import { saveHistory } from '@/lib/storage';
 
 type Screen =
   | { name: 'home' }
@@ -18,22 +19,6 @@ type Screen =
   | { name: 'result-aktif';     result: CheckResult; thumbnailUrl: string }
   | { name: 'result-mati';      result: CheckResult; thumbnailUrl: string }
   | { name: 'result-verifikasi'; result: CheckResult; thumbnailUrl: string };
-
-const SAMPLE_HISTORY: HistoryGroup[] = [
-  {
-    dateLabel: 'Hari Ini',
-    items: [
-      { id: '1', plateText: 'B 1234 ABC', status: 'AKTIF',           time: '14:20', vehicleType: 'car' },
-      { id: '2', plateText: 'L 1478 XK',  status: 'MATI',            time: '09:15', vehicleType: 'car' },
-    ],
-  },
-  {
-    dateLabel: 'Kemarin',
-    items: [
-      { id: '3', plateText: 'D 4455 ZZ', status: 'PERLU_VERIFIKASI', time: '16:45', vehicleType: 'motorcycle' },
-    ],
-  },
-];
 
 function todayLabel(): string {
   return new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
@@ -48,6 +33,15 @@ export default function Page() {
 
     try {
       const result = await checkPlateBase64(imageBase64);
+      // Simpan ke riwayat (sekali per scan, hanya saat sukses)
+      saveHistory({
+        plate_text:     result.plate_text,
+        status:         result.status,
+        expiry_month:   result.expiry_month,
+        expiry_year:    result.expiry_year,
+        days_remaining: result.days_remaining,
+        vehicle_type:   'car',
+      });
       if (result.status === 'AKTIF') {
         setScreen({ name: 'result-aktif', result, thumbnailUrl });
       } else if (result.status === 'MATI') {
@@ -97,8 +91,6 @@ export default function Page() {
   if (screen.name === 'history') {
     return (
       <HistoryScreen
-        groups={SAMPLE_HISTORY}
-        onSelectItem={() => setScreen({ name: 'home' })}
         onStartScan={() => setScreen({ name: 'capture' })}
         onNavigateHome={() => setScreen({ name: 'home' })}
       />

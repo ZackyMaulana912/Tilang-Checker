@@ -1,26 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { getHistory, type HistoryItem } from '@/lib/storage';
 
 export type CheckStatus = 'AKTIF' | 'MATI' | 'PERLU_VERIFIKASI';
 
-export interface HistoryItem {
-  id: string;
-  plateText: string;
-  status: CheckStatus;
-  time: string;
-  thumbnailUrl?: string;
-  vehicleType?: 'car' | 'motorcycle';
-}
-
-export interface HistoryGroup {
-  dateLabel: string;
-  items: HistoryItem[];
-}
-
 interface HistoryScreenProps {
-  groups: HistoryGroup[];
-  onSelectItem: (item: HistoryItem) => void;
+  onSelectItem?: (item: HistoryItem) => void;
   onStartScan: () => void;
   onNavigateHome: () => void;
 }
@@ -46,20 +32,53 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'PERLU_VERIFIKASI', label: 'Perlu Verifikasi' },
 ];
 
-export default function HistoryScreen({ groups, onSelectItem, onStartScan, onNavigateHome }: HistoryScreenProps) {
+const MONTHS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+function startOfDay(d: Date): number {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+function dateLabel(iso: string): string {
+  const d = new Date(iso);
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(d)) / 86400000);
+  if (diffDays === 0) return 'Hari Ini';
+  if (diffDays === 1) return 'Kemarin';
+  return `${d.getDate()} ${MONTHS_ID[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function timeLabel(iso: string): string {
+  return new Date(iso).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
+
+export default function HistoryScreen({ onSelectItem, onStartScan, onNavigateHome }: HistoryScreenProps) {
+  const [items, setItems] = useState<HistoryItem[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('ALL');
 
-  const filteredGroups = groups
-    .map(g => ({
-      ...g,
-      items: g.items.filter(item => {
-        const matchSearch = item.plateText.toLowerCase().includes(search.toLowerCase());
-        const matchFilter = filter === 'ALL' || item.status === filter;
-        return matchSearch && matchFilter;
-      }),
-    }))
-    .filter(g => g.items.length > 0);
+  // Muat riwayat dari localStorage saat mount
+  useEffect(() => {
+    setItems(getHistory());
+  }, []);
+
+  // Filter (search + status) lalu group by tanggal. Item sudah newest-first
+  // dari storage, jadi urutan group otomatis benar.
+  const groups = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const filtered = items.filter(item => {
+      const matchSearch = item.plate_text.toLowerCase().includes(q);
+      const matchFilter = filter === 'ALL' || item.status === filter;
+      return matchSearch && matchFilter;
+    });
+
+    const out: { dateLabel: string; items: HistoryItem[] }[] = [];
+    for (const item of filtered) {
+      const label = dateLabel(item.checked_at);
+      let g = out.find(x => x.dateLabel === label);
+      if (!g) { g = { dateLabel: label, items: [] }; out.push(g); }
+      g.items.push(item);
+    }
+    return out;
+  }, [items, search, filter]);
 
   return (
     <div className="min-h-screen pb-32 antialiased" style={{ background: 'var(--bg-secondary)', fontFamily: 'Inter, sans-serif' }}>
@@ -122,7 +141,7 @@ export default function HistoryScreen({ groups, onSelectItem, onStartScan, onNav
 
         {/* History list */}
         <div className="flex flex-col gap-8 mt-2">
-          {filteredGroups.length === 0 ? (
+          {groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20" style={{ opacity: 0.6 }}>
               <div
                 className="w-24 h-24 mb-4 rounded-full flex items-center justify-center"
@@ -131,11 +150,11 @@ export default function HistoryScreen({ groups, onSelectItem, onStartScan, onNav
                 <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--label-tertiary)' }}>history</span>
               </div>
               <p style={{ fontSize: '17px', color: 'var(--label-secondary)' }} className="text-center">
-                Belum ada riwayat pemindaian
+                {items.length === 0 ? 'Belum ada riwayat pengecekan' : 'Tidak ada hasil yang cocok'}
               </p>
             </div>
           ) : (
-            filteredGroups.map(group => (
+            groups.map(group => (
               <section key={group.dateLabel}>
                 <h2 className="font-semibold mb-2 ml-1" style={{ fontSize: '15px', color: 'var(--label-secondary)' }}>
                   {group.dateLabel}
@@ -144,20 +163,16 @@ export default function HistoryScreen({ groups, onSelectItem, onStartScan, onNav
                   {group.items.map(item => (
                     <div
                       key={item.id}
-                      onClick={() => onSelectItem(item)}
+                      onClick={() => onSelectItem?.(item)}
                       className="glass-card rounded-[20px] p-4 flex items-center gap-4 cursor-pointer active:scale-[0.98] transition-transform"
                     >
                       <div
                         className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center"
                         style={{ background: 'var(--bg-secondary)' }}
                       >
-                        {item.thumbnailUrl ? (
-                          <img src={item.thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="material-symbols-outlined" style={{ fontSize: '24px', color: 'var(--label-tertiary)' }}>
-                            {item.vehicleType === 'motorcycle' ? 'motorcycle' : 'directions_car'}
-                          </span>
-                        )}
+                        <span className="material-symbols-outlined" style={{ fontSize: '24px', color: 'var(--label-tertiary)' }}>
+                          {item.vehicle_type === 'motorcycle' ? 'motorcycle' : 'directions_car'}
+                        </span>
                       </div>
 
                       <div className="flex-1 flex flex-col">
@@ -165,13 +180,13 @@ export default function HistoryScreen({ groups, onSelectItem, onStartScan, onNav
                           className="font-medium mb-1"
                           style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '14px', letterSpacing: '0.5px', color: 'var(--label-primary)' }}
                         >
-                          {item.plateText}
+                          {item.plate_text}
                         </span>
                         <div className="flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full" style={{ background: STATUS_COLORS[item.status] }} />
                           <span style={{ fontSize: '12px', color: STATUS_COLORS[item.status] }}>{STATUS_LABELS[item.status]}</span>
                           <span style={{ fontSize: '12px', color: 'var(--label-tertiary)', margin: '0 4px' }}>•</span>
-                          <span style={{ fontSize: '12px', color: 'var(--label-secondary)' }}>{item.time}</span>
+                          <span style={{ fontSize: '12px', color: 'var(--label-secondary)' }}>{timeLabel(item.checked_at)}</span>
                         </div>
                       </div>
 
@@ -187,7 +202,7 @@ export default function HistoryScreen({ groups, onSelectItem, onStartScan, onNav
 
       {/* Bottom Nav */}
       <nav
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] flex justify-around items-center py-3 px-6 z-50"
+        className="bottom-nav fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] flex justify-around items-center py-3 px-6 z-50"
         style={{
           background: 'var(--glass-white)',
           backdropFilter: 'blur(20px)',

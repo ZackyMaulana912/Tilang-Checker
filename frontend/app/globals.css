@@ -49,3 +49,11 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Bottom nav: tetap menempel di bawah viewport + aman dari home indicator
+   iPhone (safe-area). env() fallback 0px untuk perangkat tanpa safe area.
+   Diletakkan setelah @tailwind utilities agar menang atas util .bottom-6. */
+.bottom-nav {
+  position: fixed;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+}

@@ -101,7 +101,7 @@ export default function HomeScreen({ onStartScan, onViewHistory }: HomeScreenPro
 
       {/* Bottom Nav */}
       <nav
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] flex justify-around items-center py-3 px-6 z-50"
+        className="bottom-nav fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] flex justify-around items-center py-3 px-6 z-50"
         style={{
           background: 'var(--glass-white)',
           backdropFilter: 'blur(20px)',
