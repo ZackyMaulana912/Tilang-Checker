@@ -148,7 +148,7 @@ export default function ResultAktif({
           <div className="absolute left-0 top-0 bottom-0 w-1" style={{ background: 'var(--orange)' }} />
           <div className="p-5 pl-6 flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <span style={{ color: 'var(--orange)', fontSize: '18px' }}>✦</span>
+              <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--orange)' }}>auto_awesome</span>
               <h3 className="font-semibold" style={{ fontSize: '16px', color: 'var(--label-primary)' }}>Laporan AI</h3>
             </div>
             <p className="leading-relaxed" style={{ fontSize: '15px', color: 'var(--label-secondary)' }}>{report}</p>

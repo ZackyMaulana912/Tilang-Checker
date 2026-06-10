@@ -15,7 +15,6 @@ function fileToBase64(file: File): Promise<string> {
     const reader = new FileReader();
     reader.onload  = () => {
       const result = reader.result as string;
-      // strip "data:image/jpeg;base64," prefix
       resolve(result.split(",")[1]);
     };
     reader.onerror = reject;
@@ -23,12 +22,6 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-/**
- * Resize gambar ke maksimal 1280px di sisi terpanjang (rasio dijaga) lalu
- * compress ke JPEG quality 85. Mengurangi ukuran upload & mempercepat OCR.
- * Pakai Canvas API browser — tidak butuh library tambahan.
- * Return base64 tanpa prefix "data:image/...;base64,".
- */
 export function compressImage(file: File): Promise<string> {
   return new Promise((resolve) => {
     const canvas = document.createElement("canvas");
