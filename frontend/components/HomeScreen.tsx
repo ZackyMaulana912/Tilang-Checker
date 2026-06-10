@@ -50,7 +50,7 @@ export default function HomeScreen({ onStartScan, onViewHistory }: HomeScreenPro
           TILANG CHECKER
         </h2>
         <p className="text-center max-w-[260px] mb-12" style={{ fontSize: '15px', color: 'var(--label-secondary)' }}>
-          Sistem Deteksi Masa Berlaku STNK
+          Cek masa berlaku pajak kendaraan dari foto plat nomor
         </p>
 
         {/* Feature Pills */}

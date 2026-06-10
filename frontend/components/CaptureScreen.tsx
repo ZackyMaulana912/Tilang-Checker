@@ -63,8 +63,8 @@ export default function CaptureScreen({ onBack, onCapture, onPickFromGallery, on
           {/* Guide text */}
           <div className="text-center flex flex-col items-center gap-2 z-10">
             <span className="material-symbols-outlined mb-2" style={{ fontSize: '48px', color: 'var(--label-tertiary)' }}>center_focus_strong</span>
-            <p style={{ fontSize: '15px', color: 'var(--label-secondary)' }}>Arahkan ke area stiker STNK</p>
-            <p style={{ fontSize: '13px', color: 'var(--label-tertiary)' }}>Pastikan angka bulan/tahun terlihat jelas</p>
+            <p style={{ fontSize: '15px', color: 'var(--label-secondary)' }}>Arahkan ke plat nomor kendaraan</p>
+            <p style={{ fontSize: '13px', color: 'var(--label-tertiary)' }}>Pastikan seluruh plat terlihat jelas</p>
           </div>
         </div>
 
