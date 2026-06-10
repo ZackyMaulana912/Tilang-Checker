@@ -1,9 +1,20 @@
 from ultralytics import YOLO
 from PIL import Image
 import numpy as np
+import cv2
 import io
 
 _model = None
+
+
+def preprocess_image(img: np.ndarray) -> np.ndarray:
+    """CLAHE contrast enhancement untuk foto gelap/redup."""
+    lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+    l, a, b = cv2.split(lab)
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    l = clahe.apply(l)
+    enhanced = cv2.merge([l, a, b])
+    return cv2.cvtColor(enhanced, cv2.COLOR_LAB2BGR)
 
 def _get_model():
     global _model
@@ -30,6 +41,13 @@ def detect_plate(image_bytes: bytes) -> dict:
     image = Image.open(io.BytesIO(image_bytes))
     if image.mode != "RGB":
         image = image.convert("RGB")
+
+    # Enhance contrast (CLAHE) untuk foto gelap/miring
+    arr_rgb = np.array(image)
+    arr_bgr = cv2.cvtColor(arr_rgb, cv2.COLOR_RGB2BGR)
+    arr_bgr = preprocess_image(arr_bgr)
+    image = Image.fromarray(cv2.cvtColor(arr_bgr, cv2.COLOR_BGR2RGB))
+
     results = _get_model()(image, verbose=False)
 
     # Filter deteksi: cari class kendaraan (car=2, motorcycle=3, truck=7, bus=5)
