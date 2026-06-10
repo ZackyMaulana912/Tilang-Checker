@@ -1,4 +1,4 @@
-# 🚗 Tilang Checker
+# Tilang Checker
 
 Web app untuk **mendeteksi masa berlaku STNK** dari foto plat / stiker pajak kendaraan
 Indonesia. Cukup foto bagian stiker masa berlaku, sistem akan membaca bulan/tahun,
@@ -9,42 +9,42 @@ berbahasa Indonesia memakai LLM.
 
 ---
 
-## ✨ Fitur
+## Fitur
 
-- 📸 Ambil foto langsung dari kamera HP atau upload dari galeri
-- 🔍 Deteksi kendaraan & crop area plat otomatis (YOLOv8)
-- 🧠 Validasi apakah objek benar-benar plat (MobileNetV2)
-- 🔤 Baca tanggal masa berlaku dengan OCR (EasyOCR) + normalisasi karakter
-- ⚖️ Tentukan status STNK berdasarkan tanggal hari ini
-- 📝 Laporan otomatis untuk petugas (Gemini / LLM lokal, ada fallback template)
-- 📱 UI bergaya iOS glassmorphism, responsif, siap dijadikan PWA
+- Ambil foto langsung dari kamera HP atau upload dari galeri
+- Deteksi kendaraan & crop area plat otomatis (YOLOv8)
+- Validasi apakah objek benar-benar plat (MobileNetV2)
+- Baca tanggal masa berlaku dengan OCR (EasyOCR) + normalisasi karakter
+- Tentukan status STNK berdasarkan tanggal hari ini
+- Laporan otomatis untuk petugas (Gemini / LLM lokal, ada fallback template)
+- UI bergaya iOS glassmorphism, responsif, siap dijadikan PWA
 
 ---
 
-## 🏗️ Arsitektur Pipeline
+## Arsitektur Pipeline
 
 Saat user mengirim foto, backend menjalankan 5 modul berurutan:
 
 ```
 Foto (base64)
-   │
-   ▼
-[M2] detect.py    →  YOLOv8: deteksi kendaraan, crop area plat
-   │
-   ▼
-[M1] classify.py  →  MobileNetV2: valid plat / bukan (fallback rule-based)
-   │
-   ▼
-[M3] ocr.py       →  EasyOCR: baca bulan/tahun dari stiker STNK
-   │
-   ▼
-[M5] agent.py     →  Logika: bandingkan dengan tanggal hari ini → AKTIF/MATI
-   │
-   ▼
-[M4] report.py    →  LLM (Gemini / lokal) susun laporan, fallback template
-   │
-   ▼
-JSON hasil  →  Frontend menampilkan layar AKTIF / MATI / PERLU_VERIFIKASI
+   |
+   v
+[M2] detect.py    ->  YOLOv8: deteksi kendaraan, crop area plat, CLAHE enhancement
+   |
+   v
+[M1] classify.py  ->  MobileNetV2: valid plat / bukan (fallback rule-based)
+   |
+   v
+[M3] ocr.py       ->  EasyOCR: baca bulan/tahun dari stiker STNK
+   |
+   v
+[M5] agent.py     ->  Logika: bandingkan dengan tanggal hari ini -> AKTIF/MATI
+   |
+   v
+[M4] report.py    ->  LLM (Gemini / lokal) susun laporan, fallback template
+   |
+   v
+JSON hasil  ->  Frontend menampilkan layar AKTIF / MATI / PERLU_VERIFIKASI
 ```
 
 | Modul | File | Teknologi |
@@ -57,7 +57,7 @@ JSON hasil  →  Frontend menampilkan layar AKTIF / MATI / PERLU_VERIFIKASI
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 ### Frontend
 | Komponen | Versi |
@@ -80,12 +80,12 @@ JSON hasil  →  Frontend menampilkan layar AKTIF / MATI / PERLU_VERIFIKASI
 | google-generativeai | 0.7 |
 
 ### Deploy
-- **Frontend** → Vercel
-- **Backend** → HuggingFace Spaces (Docker) / Railway
+- **Frontend** -> Vercel
+- **Backend** -> HuggingFace Spaces (Docker) / Railway
 
 ---
 
-## 📁 Struktur Folder
+## Struktur Folder
 
 ```
 CAPSTONE/
@@ -122,7 +122,7 @@ CAPSTONE/
 
 ---
 
-## 🚀 Menjalankan di Lokal
+## Menjalankan di Lokal
 
 ### Prasyarat
 - **Python 3.11**
@@ -168,7 +168,7 @@ Frontend jalan di **http://localhost:3000**. Buka di browser, upload foto dari
 
 ---
 
-## 🔑 Environment Variables
+## Environment Variables
 
 ### `backend/.env`
 ```bash
@@ -187,7 +187,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ---
 
-## 🤖 Mode LLM (Modul M4)
+## Mode LLM (Modul M4)
 
 Laporan akhir disusun LLM. Ada 2 mode + fallback:
 
@@ -201,7 +201,7 @@ Gemini API key gratis dibuat di https://aistudio.google.com/apikey (diawali `AIz
 
 ---
 
-## 🔌 API
+## API
 
 ### `GET /health`
 ```json
@@ -217,7 +217,7 @@ Gemini API key gratis dibuat di https://aistudio.google.com/apikey (diawali `AIz
 ```json
 {
   "status": "AKTIF",
-  "plate_text": "UNKNOWN",
+  "plate_text": "B 537 RUM",
   "expiry_month": 6,
   "expiry_year": 2027,
   "days_remaining": 386,
@@ -238,7 +238,7 @@ curl -X POST http://localhost:8000/check \
 
 ---
 
-## 🧪 Testing Cepat
+## Testing Cepat
 
 Foto contoh tersedia di `data/samples/`. Hasil pipeline (diuji lokal):
 
@@ -256,7 +256,7 @@ Foto contoh tersedia di `data/samples/`. Hasil pipeline (diuji lokal):
 > OCR berbasis EasyOCR (CPU). Akurasi bergantung pada kualitas foto dan keterbacaan stiker STNK.
 > Foto buram, resolusi kecil, atau stiker tertutup bisa menghasilkan `PERLU_VERIFIKASI`.
 
-### Kenapa plat bisa `UNKNOWN`?
+### Kenapa plat bisa UNKNOWN?
 
 Nomor plat ditampilkan `UNKNOWN` ketika OCR tidak berhasil mengenali pola
 `[kode area] [angka] [suffix]` dari foto. Ini bisa terjadi karena:
@@ -266,12 +266,12 @@ Nomor plat ditampilkan `UNKNOWN` ketika OCR tidak berhasil mengenali pola
 3. **Resolusi rendah atau miring** — EasyOCR kesulitan memisahkan karakter plat dari noise latar.
 4. **EasyOCR bukan model khusus plat** — ditraining untuk teks umum, bukan font dan layout spesifik plat Indonesia. Nomor seperti `4927 PH` tetap bisa ditampilkan meski kode area tidak terbaca.
 
-> **Status AKTIF/MATI tetap akurat** meski plat `UNKNOWN` — karena status ditentukan dari
+> **Status AKTIF/MATI tetap akurat** meski plat UNKNOWN — karena status ditentukan dari
 > tanggal STNK, bukan dari nomor plat.
 
 ---
 
-## ☁️ Deployment
+## Deployment
 
 | Layanan | URL | Keterangan |
 |---------|-----|------------|
@@ -280,13 +280,13 @@ Nomor plat ditampilkan `UNKNOWN` ketika OCR tidak berhasil mengenali pola
 
 ### Cara deploy ulang
 
-- **Backend → HuggingFace Spaces**: pakai `backend/Dockerfile` (SDK Docker, port 7860),
+- **Backend -> HuggingFace Spaces**: pakai `backend/Dockerfile` (SDK Docker, port 7860),
   set Secret `LLM_MODE=gemini` & `GEMINI_API_KEY`.
-- **Backend → Railway**: pakai `backend/nixpacks.toml`.
-- **Frontend → Vercel**: Root Directory `frontend`, set `NEXT_PUBLIC_API_URL` ke URL backend.
+- **Backend -> Railway**: pakai `backend/nixpacks.toml`.
+- **Frontend -> Vercel**: Root Directory `frontend`, set `NEXT_PUBLIC_API_URL` ke URL backend.
 
 ---
 
-## 📝 Lisensi
+## Lisensi
 
 MIT — proyek edukasi capstone.
