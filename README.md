@@ -256,9 +256,29 @@ Foto contoh tersedia di `data/samples/`. Hasil pipeline (diuji lokal):
 > OCR berbasis EasyOCR (CPU). Akurasi bergantung pada kualitas foto dan keterbacaan stiker STNK.
 > Foto buram, resolusi kecil, atau stiker tertutup bisa menghasilkan `PERLU_VERIFIKASI`.
 
+### Kenapa plat bisa `UNKNOWN`?
+
+Nomor plat ditampilkan `UNKNOWN` ketika OCR tidak berhasil mengenali pola
+`[kode area] [angka] [suffix]` dari foto. Ini bisa terjadi karena:
+
+1. **Kode area tertutup** — huruf kode kota (misal `L`, `B`) berada di area yang terhalang logo kendaraan, stiker lain, atau terpotong frame foto.
+2. **Foto terlalu dekat ke stiker tanggal** — pipeline mendeteksi tanggal STNK dengan baik, tapi nomor plat tidak masuk dalam frame crop.
+3. **Resolusi rendah atau miring** — EasyOCR kesulitan memisahkan karakter plat dari noise latar.
+4. **EasyOCR bukan model khusus plat** — ditraining untuk teks umum, bukan font dan layout spesifik plat Indonesia. Nomor seperti `4927 PH` tetap bisa ditampilkan meski kode area tidak terbaca.
+
+> **Status AKTIF/MATI tetap akurat** meski plat `UNKNOWN` — karena status ditentukan dari
+> tanggal STNK, bukan dari nomor plat.
+
 ---
 
-## ☁️ Deployment (ringkas)
+## ☁️ Deployment
+
+| Layanan | URL | Keterangan |
+|---------|-----|------------|
+| Frontend (Vercel) | https://tilang-chacker-web-app.vercel.app | Production |
+| Backend (HuggingFace) | https://zacky912-tilang-checker-backend.hf.space | API server |
+
+### Cara deploy ulang
 
 - **Backend → HuggingFace Spaces**: pakai `backend/Dockerfile` (SDK Docker, port 7860),
   set Secret `LLM_MODE=gemini` & `GEMINI_API_KEY`.
