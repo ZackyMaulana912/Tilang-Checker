@@ -194,7 +194,7 @@ Laporan akhir disusun LLM. Ada 2 mode + fallback:
 | Mode | Kapan dipakai | Cara aktifkan |
 |------|---------------|---------------|
 | `local` | Dev pakai LM Studio | `LLM_MODE=local`, jalankan LM Studio server di port 1234 |
-| `gemini` | Production | `LLM_MODE=gemini` + `GEMINI_API_KEY` (model `gemini-1.5-flash`) |
+| `gemini` | Production | `LLM_MODE=gemini` + `GEMINI_API_KEY` (model `gemini-2.0-flash`) |
 | *fallback* | Otomatis | Kalau LLM tidak tersedia, pakai template teks bawaan |
 
 Gemini API key gratis dibuat di https://aistudio.google.com/apikey (diawali `AIzaSy...`).
@@ -240,14 +240,21 @@ curl -X POST http://localhost:8000/check \
 
 ## 🧪 Testing Cepat
 
-Beberapa foto contoh & hasil yang diharapkan:
+Foto contoh tersedia di `data/samples/`. Hasil pipeline (diuji lokal):
 
-| File | Status | Masa berlaku |
-|------|--------|--------------|
-| `test1.jpg` | AKTIF | Juni 2027 |
-| `test2.jpg` | MATI | April 2022 |
-| `test6.jpg` | AKTIF | Agustus 2029 |
-| `test8.jpg` | MATI | April 2016 |
+| File | Plat | Status | Masa Berlaku |
+|------|------|--------|--------------|
+| `test1.jpg` | B 537 RUM | AKTIF | Juni 2027 |
+| `test2.jpg` | 7601 TS | MATI | April 2022 |
+| `test5.jpg` | L 1253 EM | MATI | April 2020 |
+| `test6.jpg` | 1237 KCE | AKTIF | Agustus 2029 |
+| `test7.jpg` | — | AKTIF | September 2027 |
+| `test8.jpg` | B 6577 MEF | MATI | ~2016 |
+| `test10.jpg` | 4927 PH | AKTIF | September 2029 |
+| `test11.jpg` | 4927 PH | AKTIF | September 2029 |
+
+> OCR berbasis EasyOCR (CPU). Akurasi bergantung pada kualitas foto dan keterbacaan stiker STNK.
+> Foto buram, resolusi kecil, atau stiker tertutup bisa menghasilkan `PERLU_VERIFIKASI`.
 
 ---
 
