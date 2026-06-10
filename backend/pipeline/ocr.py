@@ -41,6 +41,8 @@ def parse_expiry(texts: list[str]) -> dict:
       - MMYY (tanpa separator)              → "0422"
     """
     combined = " ".join(normalize_ocr(t) for t in texts)
+    # OCR sering pisah satu digit jadi dua token: "0 9" → "09", ".2 9" → ".29"
+    combined = re.sub(r'(\d)\s+(\d)', r'\1\2', combined)
 
     # Separator yang dikenali.
     # " (double quote) = OCR sering baca * sebagai "
@@ -109,13 +111,22 @@ def parse_plate(texts: list[str]) -> str | None:
     Format plat: 1-2 huruf (kode area) + 1-4 angka + 1-3 huruf.
     Cover variasi spasi: "B 537 RUM", "B537RUM", "B 537RUM", "B537 RUM".
     """
-    raw = " ".join(t.upper() for t in texts)
+    # Filter noise: kata panjang tanpa angka (nama kota, kelurahan, merk kendaraan)
+    filtered = [t for t in texts if not re.match(r'^[A-Za-z]{5,}$', t.strip())]
+    raw = " ".join(t.upper() for t in filtered)
     # Buang karakter selain huruf/angka, sisakan spasi sebagai pemisah
     cleaned = re.sub(r"[^A-Z0-9 ]", " ", raw)
 
+    # Format lengkap: prefix(1-2 huruf) + angka(1-4) + suffix(1-3 huruf)
     m = re.search(r"\b([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})\b", cleaned)
     if m:
         return f"{m.group(1)} {m.group(2)} {m.group(3)}"
+
+    # Fallback: angka + suffix tanpa prefix (kode area tidak terbaca OCR)
+    m2 = re.search(r"\b([0-9]{3,4})\s+([A-Z]{2,3})\b", cleaned)
+    if m2:
+        return f"{m2.group(1)} {m2.group(2)}"
+
     return None
 
 
