@@ -216,13 +216,9 @@ export default function HistoryScreen({ onSelectItem, onStartScan, onNavigateHom
           <span className="material-symbols-outlined">home</span>
           <span style={{ fontSize: '12px', marginTop: '4px' }}>Beranda</span>
         </button>
-        <button
-          onClick={onStartScan}
-          className="flex flex-col items-center -translate-y-4 px-4 py-2 rounded-full"
-          style={{ background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.8)' }}
-        >
-          <span className="material-symbols-outlined" style={{ color: 'var(--blue)' }}>document_scanner</span>
-          <span className="font-medium" style={{ fontSize: '12px', marginTop: '4px', color: 'var(--label-primary)' }}>Scan</span>
+        <button onClick={onStartScan} className="flex flex-col items-center" style={{ color: 'var(--label-secondary)' }}>
+          <span className="material-symbols-outlined">document_scanner</span>
+          <span style={{ fontSize: '12px', marginTop: '4px' }}>Scan</span>
         </button>
         <button className="flex flex-col items-center" style={{ color: 'var(--blue)' }}>
           <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>history</span>
