@@ -40,9 +40,12 @@ def parse_expiry(texts: list[str]) -> dict:
       - G[M]·YY (prefix huruf, 1 digit)     → "G6·27", "G6 27" → 6/27
       - MMYY (tanpa separator)              → "0422"
     """
-    combined = " ".join(normalize_ocr(t) for t in texts)
-    # OCR sering pisah satu digit jadi dua token: "0 9" → "09", ".2 9" → ".29"
-    combined = re.sub(r'(\d)\s+(\d)', r'\1\2', combined)
+    def _clean_token(t: str) -> str:
+        t = re.sub(r"^['\"`]+", '', t)           # strip leading OCR noise: "'2 9" → "2 9"
+        t = re.sub(r'(\d)\s+(\d)', r'\1\2', t)  # rejoin split digits dalam satu token: "0 9" → "09"
+        return t
+
+    combined = " ".join(normalize_ocr(_clean_token(t)) for t in texts)
 
     # Separator yang dikenali.
     # " (double quote) = OCR sering baca * sebagai "
@@ -85,6 +88,11 @@ def parse_expiry(texts: list[str]) -> dict:
             r'\b(0[1-9]|1[0-2])(\d{2})\b',
             lambda m: (int(m.group(1)), 2000 + int(m.group(2)))
         ),
+        # 8. MMNYY: 5 digit, digit tengah = separator yg salah baca jadi angka ("06216" → 06/16)
+        (
+            r'\b(0[1-9]|1[0-2])\d(\d{2})\b',
+            lambda m: (int(m.group(1)), 2000 + int(m.group(2)))
+        ),
     ]
 
     for pattern, handler in patterns:
@@ -113,14 +121,30 @@ def parse_plate(texts: list[str]) -> str | None:
     """
     # Filter noise: kata panjang tanpa angka (nama kota, kelurahan, merk kendaraan)
     filtered = [t for t in texts if not re.match(r'^[A-Za-z]{5,}$', t.strip())]
-    raw = " ".join(t.upper() for t in filtered)
+    # Rejoin digit yang OCR pisah dalam satu token: "49 27" → "4927"
+    raw = " ".join(re.sub(r'(\d)\s+(\d)', r'\1\2', t).upper() for t in filtered)
     # Buang karakter selain huruf/angka, sisakan spasi sebagai pemisah
     cleaned = re.sub(r"[^A-Z0-9 ]", " ", raw)
 
     # Format lengkap: prefix(1-2 huruf) + angka(1-4) + suffix(1-3 huruf)
     m = re.search(r"\b([A-Z]{1,2})\s*([0-9]{1,4})\s*([A-Z]{1,3})\b", cleaned)
-    if m:
-        return f"{m.group(1)} {m.group(2)} {m.group(3)}"
+    standard_result = f"{m.group(1)} {m.group(2)} {m.group(3)}" if m else None
+
+    # Token-based assembly: kode area sering terbaca terpisah dari angka/suffix
+    # Contoh: "L", "EP]", "1901" → "L 1901 EP"
+    clean_tokens = [re.sub(r"[^A-Z0-9]", "", t.upper()) for t in filtered]
+    single_letters = [t for t in clean_tokens if re.match(r'^[A-Z]$', t)]
+    numbers        = [t for t in clean_tokens if re.match(r'^[0-9]{3,4}$', t)]
+    suffixes       = [t for t in clean_tokens if re.match(r'^[A-Z]{2,3}$', t)]
+
+    if single_letters and numbers and suffixes:
+        token_result = f"{single_letters[0]} {numbers[0]} {suffixes[0]}"
+        # Gunakan token_result jika standard tidak pakai single-letter area code tsb
+        if standard_result is None or not standard_result.startswith(single_letters[0] + ' '):
+            return token_result
+
+    if standard_result:
+        return standard_result
 
     # Fallback: angka + suffix tanpa prefix (kode area tidak terbaca OCR)
     m2 = re.search(r"\b([0-9]{3,4})\s+([A-Z]{2,3})\b", cleaned)
@@ -233,9 +257,9 @@ def read_expiry_date(image_bytes: bytes) -> dict:
         }
 
         # Coba semua varian, ambil yang terbaik:
-        # - ada tanggal + confidence tertinggi (prioritas utama)
+        # - ada tanggal + confidence >= 0.15 (filter false-positive dari variant noise)
         # - jika tidak ada tanggal, ambil yang confidence tertinggi
-        if current["month"] is not None:
+        if current["month"] is not None and current["confidence"] >= 0.15:
             if best["month"] is None or current["confidence"] > best["confidence"]:
                 best = current
         elif best["month"] is None and current["confidence"] > best["confidence"]:
