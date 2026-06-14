@@ -9,19 +9,47 @@ import ResultAktif from '@/components/ResultAktif';
 import ResultMati from '@/components/ResultMati';
 import ResultVerifikasi from '@/components/ResultVerifikasi';
 import { checkPlateBase64, type CheckResult } from '@/lib/api';
-import { saveHistory } from '@/lib/storage';
+import { saveHistory, type HistoryItem } from '@/lib/storage';
 
 type Screen =
   | { name: 'home' }
   | { name: 'capture' }
-  | { name: 'processing' }
+  | { name: 'processing'; thumbnailUrl: string }
   | { name: 'history' }
-  | { name: 'result-aktif';     result: CheckResult; thumbnailUrl: string }
-  | { name: 'result-mati';      result: CheckResult; thumbnailUrl: string }
+  | { name: 'result-aktif';      result: CheckResult; thumbnailUrl: string }
+  | { name: 'result-mati';       result: CheckResult; thumbnailUrl: string }
   | { name: 'result-verifikasi'; result: CheckResult; thumbnailUrl: string };
 
 function todayLabel(): string {
   return new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+const BULAN_ID: Record<number, string> = {
+  1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
+  5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
+  9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember',
+};
+
+function resultFromHistory(item: HistoryItem): CheckResult {
+  const bulan = item.expiry_month ? BULAN_ID[item.expiry_month] : null;
+  const tahun = item.expiry_year;
+  let report = '';
+  if (item.status === 'AKTIF') {
+    report = `STNK kendaraan ${item.plate_text} masih aktif hingga ${bulan} ${tahun}.`;
+  } else if (item.status === 'MATI') {
+    report = `STNK kendaraan ${item.plate_text} sudah kadaluarsa sejak ${bulan} ${tahun}.`;
+  } else {
+    report = 'Data STNK tidak dapat terbaca dari foto. Lakukan pengecekan manual.';
+  }
+  return {
+    status:         item.status,
+    plate_text:     item.plate_text,
+    expiry_month:   item.expiry_month,
+    expiry_year:    item.expiry_year,
+    days_remaining: item.days_remaining,
+    report,
+    confidence:     0,
+  };
 }
 
 export default function Page() {
@@ -29,7 +57,7 @@ export default function Page() {
 
   async function handleCapture(imageBase64: string) {
     const thumbnailUrl = `data:image/jpeg;base64,${imageBase64}`;
-    setScreen({ name: 'processing' });
+    setScreen({ name: 'processing', thumbnailUrl });
 
     try {
       const result = await checkPlateBase64(imageBase64);
@@ -85,7 +113,7 @@ export default function Page() {
   }
 
   if (screen.name === 'processing') {
-    return <ProcessingScreen progress={60} />;
+    return <ProcessingScreen thumbnailUrl={screen.thumbnailUrl} />;
   }
 
   if (screen.name === 'history') {
@@ -93,6 +121,12 @@ export default function Page() {
       <HistoryScreen
         onStartScan={() => setScreen({ name: 'capture' })}
         onNavigateHome={() => setScreen({ name: 'home' })}
+        onSelectItem={(item) => {
+          const result = resultFromHistory(item);
+          if (item.status === 'AKTIF') setScreen({ name: 'result-aktif',      result, thumbnailUrl: '' });
+          else if (item.status === 'MATI') setScreen({ name: 'result-mati',   result, thumbnailUrl: '' });
+          else setScreen({ name: 'result-verifikasi', result, thumbnailUrl: '' });
+        }}
       />
     );
   }
@@ -111,7 +145,7 @@ export default function Page() {
         thumbnailUrl={thumbnailUrl}
         onBack={() => setScreen({ name: 'home' })}
         onCheckAgain={() => setScreen({ name: 'capture' })}
-        onSave={() => {}}
+        onSave={() => setScreen({ name: 'history' })}
       />
     );
   }
@@ -128,7 +162,7 @@ export default function Page() {
         thumbnailUrl={thumbnailUrl}
         onBack={() => setScreen({ name: 'home' })}
         onCheckAgain={() => setScreen({ name: 'capture' })}
-        onSave={() => {}}
+        onSave={() => setScreen({ name: 'history' })}
       />
     );
   }
