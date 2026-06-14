@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { getHistory, type HistoryItem } from '@/lib/storage';
+import { getHistory, clearHistory, type HistoryItem } from '@/lib/storage';
 
 export type CheckStatus = 'AKTIF' | 'MATI' | 'PERLU_VERIFIKASI';
 
@@ -54,11 +54,18 @@ export default function HistoryScreen({ onSelectItem, onStartScan, onNavigateHom
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterKey>('ALL');
+  const [confirmClear, setConfirmClear] = useState(false);
 
-  // Muat riwayat dari localStorage saat mount
   useEffect(() => {
     setItems(getHistory());
   }, []);
+
+  function handleClear() {
+    if (!confirmClear) { setConfirmClear(true); return; }
+    clearHistory();
+    setItems([]);
+    setConfirmClear(false);
+  }
 
   // Filter (search + status) lalu group by tanggal. Item sudah newest-first
   // dari storage, jadi urutan group otomatis benar.
@@ -97,9 +104,20 @@ export default function HistoryScreen({ onSelectItem, onStartScan, onNavigateHom
           <span className="material-symbols-outlined" style={{ color: 'var(--blue)', fontVariationSettings: "'FILL' 1" }}>security</span>
           <h1 className="font-semibold" style={{ fontSize: '22px', color: 'var(--blue)' }}>Riwayat</h1>
         </div>
-        <button style={{ color: 'var(--label-secondary)' }}>
-          <span className="material-symbols-outlined">settings</span>
-        </button>
+        {items.length > 0 && (
+          <button
+            onClick={handleClear}
+            onBlur={() => setConfirmClear(false)}
+            className="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+            style={{
+              fontSize: '13px',
+              color: confirmClear ? '#fff' : 'var(--red)',
+              background: confirmClear ? 'var(--red)' : 'rgba(255,59,48,0.1)',
+            }}
+          >
+            {confirmClear ? 'Yakin?' : 'Hapus Semua'}
+          </button>
+        )}
       </header>
 
       {/* Main */}
