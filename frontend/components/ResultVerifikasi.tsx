@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface ResultVerifikasiProps {
   detectedText: string;
   confidence: number;   // 0-1 float from API
@@ -25,6 +27,13 @@ export default function ResultVerifikasi({
   onRetakePhoto,
   onReport,
 }: ResultVerifikasiProps) {
+  const [reported, setReported] = useState(false);
+
+  function handleReport() {
+    setReported(true);
+    onReport();
+  }
+
   const confidencePct = Math.round(confidence * 100);
   const knownChars = detectedText.replace(/\s/g, '').length;
   const unknownCount = Math.max(0, 8 - knownChars);
@@ -170,11 +179,21 @@ export default function ResultVerifikasi({
             Foto Ulang
           </button>
           <button
-            onClick={onReport}
-            className="w-full glass-card py-4 font-medium active:scale-[0.98] transition-transform"
-            style={{ fontSize: '17px', color: 'var(--blue)', border: '1px solid rgba(0,122,255,0.3)', borderRadius: 'var(--radius-btn)' }}
+            onClick={handleReport}
+            disabled={reported}
+            className="w-full glass-card py-4 font-medium active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+            style={{
+              fontSize: '17px',
+              borderRadius: 'var(--radius-btn)',
+              color: reported ? 'var(--green)' : 'var(--blue)',
+              border: reported ? '1px solid rgba(52,199,89,0.4)' : '1px solid rgba(0,122,255,0.3)',
+              opacity: reported ? 0.8 : 1,
+            }}
           >
-            Laporkan
+            <span className="material-symbols-outlined" style={{ fontSize: '18px', fontVariationSettings: "'FILL' 1" }}>
+              {reported ? 'check_circle' : 'flag'}
+            </span>
+            {reported ? 'Laporan Terkirim' : 'Laporkan'}
           </button>
         </div>
       </main>
