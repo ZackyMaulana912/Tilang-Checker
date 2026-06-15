@@ -17,6 +17,7 @@ berbahasa Indonesia memakai LLM.
 - Baca tanggal masa berlaku dengan OCR (EasyOCR) + normalisasi karakter
 - Tentukan status STNK berdasarkan tanggal hari ini
 - Laporan otomatis untuk petugas (Gemini / LLM lokal, ada fallback template)
+- Riwayat pengecekan tersimpan di perangkat (localStorage), bisa difilter & dicari
 - UI bergaya iOS glassmorphism, responsif, siap dijadikan PWA
 
 ---
@@ -116,6 +117,7 @@ CAPSTONE/
 │   │   ├── ResultMati.tsx
 │   │   └── ResultVerifikasi.tsx
 │   ├── lib/api.ts           # Fetch ke backend
+│   ├── lib/storage.ts       # Riwayat pengecekan (localStorage)
 │   └── package.json
 └── data/samples/            # Foto contoh untuk testing
 ```
